@@ -5,7 +5,7 @@
 # Parameters:
 
 define ipeer::instance (
-  $domain,
+  $server_domain,
   $doc_base = "/www_data/html",
   $port = 80,
   $revision = undef,
@@ -14,6 +14,10 @@ define ipeer::instance (
   $mount_fstype = "nfs4",
   $owner = 'root',
   $group = 'root',
+  $db_host = 'localhost',
+  $db_username = 'ipeer',
+  $db_password = 'ipeer',
+  $db_name = 'ipeer',
 ) {
 
   $parent_path = dirname($doc_base)
@@ -70,7 +74,7 @@ define ipeer::instance (
     if (-d $request_filename) { break; }
     rewrite ^(.+)$ /index.php?url=$1 last;'
   
-  nginx::resource::vhost {$domain:
+  nginx::resource::vhost {$server_domain:
     ensure         => present,
     www_root	   => "$doc_base/app/webroot",
     listen_port    => $port,
@@ -79,7 +83,7 @@ define ipeer::instance (
   
   nginx::resource::location { $name:
     ensure => present,
-    vhost => $domain,
+    vhost => $server_domain,
     location => '~ \.php$',
     fastcgi        => 'ipeer',
     fastcgi_script => "$doc_base/app/webroot\$fastcgi_script_name"
@@ -91,5 +95,12 @@ define ipeer::instance (
       proto  => tcp,
       action => accept,
     }
+  }
+
+  # setup iPeer db config file
+  File <<| tag == $domain |>> ->
+  file {"$doc_base/app/config/database.php":
+    ensure => link,
+    target => "/etc/ipeerdb.${domain}.php",
   }
 }
