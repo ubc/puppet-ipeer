@@ -85,6 +85,8 @@ class ipeer::web(
       ensure => "directory",
       owner => 'nginx',
       group => 'nginx',
+      mode => '0775',
+      require => Package['nginx'],
     }
   }
 
