@@ -31,7 +31,7 @@ class ipeer::web(
   }
   
   # php environment  
-  if ! defined (php::ini['/etc/php.ini']) {
+  if ! defined(Php::Ini['/etc/php.ini']) {
     php::ini { '/etc/php.ini':
         display_errors => 'Off',
         memory_limit   => '256M',
@@ -39,11 +39,11 @@ class ipeer::web(
     }
   }
   
-  if ! defined (Class["php::cli"]) {
+  if ! defined(Class["php::cli"]) {
     include php::cli
   }
   
-  if ! defined (php::module['pecl-apc']) {
+  if ! defined(Php::Module['pecl-apc']) {
     php::module { 'pecl-apc': }
     php::module::ini { 'pecl-apc':
       settings => {
@@ -54,22 +54,21 @@ class ipeer::web(
     }
   }
 
-  if ! defined (php::module['xml']) {
+  if ! defined(Php::Module['xml']) {
     php::module { 'xml': }
   }
 
-  if ! defined (php::module['gd']) {
+  if ! defined(Php::Module['gd']) {
     php::module { 'gd': }
   }
 
-  if ! defined (php::module['ldap']) {
+  if ! defined(Php::Module['ldap']) {
     php::module { 'ldap': }
   }
 
-  if ! defined (php::module['mysql']) {
+  if ! defined(Php::Module['mysql']) {
     php::module { 'mysql': }
   }
-
   
   include php::fpm::daemon
   php::fpm::conf { 'ipeer':

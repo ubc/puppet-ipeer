@@ -14,10 +14,17 @@ define ipeer::instance (
   $mount_fstype = "nfs4",
   $owner = 'root',
   $group = 'root',
-  $db_host = 'localhost',
-  $db_username = 'ipeer',
-  $db_password = 'ipeer',
-  $db_name = 'ipeer',
+  $default = false,
+  $auth_module = 'default',
+  $ldap_host = 'ldaps://yourschool.edu.ca/',
+  $ldap_port = 636,
+  $ldap_serviceUsername = 'uid=ipeer, ou=Special Users, o=yourschool.edu.ca',
+  $ldap_servicePassword = 'secret',
+  $ldap_baseDn = 'ou=Campus Login, o=yourshool.edu.ca',
+  $ldap_usernameField = 'username',
+  $ldap_attributeSearchFilters = '',
+  $ldap_attributeMap = '',
+  $ldap_fallbackInternal = true,
 ) {
 
   $parent_path = dirname($doc_base)
@@ -66,27 +73,31 @@ define ipeer::instance (
   file { "$doc_base/app/tmp":
     ensure => "directory",
     mode => "0777",
-    recurse => true,
   }
 
   $custom_cfg = 
     'if (-f $request_filename) { break; }
     if (-d $request_filename) { break; }
     rewrite ^(.+)$ /index.php?url=$1 last;'
-  
+ 
   nginx::resource::vhost {$server_domain:
     ensure         => present,
     www_root	   => "$doc_base/app/webroot",
     listen_port    => $port,
     location_cfg_custom => $custom_cfg,
+    server_name => $default ? {
+      true  => [$server_domain, $fqdn],
+      false => [$server_domain],
+    },
   }
   
-  nginx::resource::location { $name:
+  nginx::resource::location { '~ \.php$':
     ensure => present,
     vhost => $server_domain,
     location => '~ \.php$',
     fastcgi        => 'ipeer',
-    fastcgi_script => "$doc_base/app/webroot\$fastcgi_script_name"
+    fastcgi_script => "$doc_base/app/webroot\$fastcgi_script_name",
+    location_cfg_prepend => { fastcgi_read_timeout => 600 },
   }
 
   if ! defined(Firewall["100 allow $port access"]) {
@@ -102,5 +113,16 @@ define ipeer::instance (
   file {"$doc_base/app/config/database.php":
     ensure => link,
     target => "/etc/ipeerdb.${domain}.php",
+  }
+
+  # make sure the installed.txt exists
+  file {"$doc_base/app/config/installed.txt":
+    ensure => present,
+  }
+
+  # setup authentication config file
+  file {"$doc_base/app/config/guard.php":
+    ensure => present,
+    content => template('ipeer/guard.php.erb'),
   }
 }
