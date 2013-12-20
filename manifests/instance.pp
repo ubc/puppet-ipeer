@@ -25,6 +25,7 @@ define ipeer::instance (
   $ldap_attributeSearchFilters = '',
   $ldap_attributeMap = '',
   $ldap_fallbackInternal = true,
+  $session_handling = 'php',
 ) {
 
   $parent_path = dirname($doc_base)
@@ -124,5 +125,11 @@ define ipeer::instance (
   file {"$doc_base/app/config/guard.php":
     ensure => present,
     content => template('ipeer/guard.php.erb'),
+  }
+
+  # setup core config override file
+  file {"$doc_base/app/config/config.local.php":
+    ensure => present,
+    content => template('ipeer/config.local.php.erb'),
   }
 }
