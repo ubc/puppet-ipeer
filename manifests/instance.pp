@@ -90,6 +90,7 @@ define ipeer::instance (
       true  => [$server_domain, $fqdn],
       false => [$server_domain],
     },
+    vhost_cfg_prepend => { 'add_header' => "X-APP-Server ${hostname}" },
   }
   
   nginx::resource::location { '~ \.php$':
