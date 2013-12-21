@@ -3,6 +3,7 @@
 # This class installs iPeer instance
 #
 # Parameters:
+#   static_cache cache for static files. false: no cache, other value, e.g. 7d for 7 days
 
 define ipeer::instance (
   $server_domain,
@@ -26,6 +27,14 @@ define ipeer::instance (
   $ldap_attributeMap = '',
   $ldap_fallbackInternal = true,
   $session_handling = 'php',
+  $ssl = false,
+  $ssl_cert = undef,
+  $ssl_key = undef,
+  $ssl_port = 443,
+  $proxy_cache = false,
+  $proxy_cache_valid = false,
+  $static_cache = false, 
+  $apc_password = 'password',
 ) {
 
   $parent_path = dirname($doc_base)
@@ -91,6 +100,22 @@ define ipeer::instance (
       false => [$server_domain],
     },
     vhost_cfg_prepend => { 'add_header' => "X-APP-Server ${hostname}" },
+    ssl => $ssl,
+    ssl_cert => $ssl_cert,
+    ssl_key  => $ssl_key,
+    ssl_port => $ssl_port,
+    proxy_cache  =>  $proxy_cache,
+    proxy_cache_valid => $proxy_cache_valid,
+  }
+
+  if $static_cache {
+    nginx::resource::location { '~ ^/(img|js|css)/':
+      ensure => present,
+      www_root	   => "$doc_base/app/webroot",
+      vhost => $server_domain,
+      location => '~ ^/(img|js|css)/',
+      location_cfg_append => { 'access_log' => 'off', 'expires' => $static_cache, 'add_header' => 'Cache-Control public'}
+    }
   }
   
   nginx::resource::location { '~ \.php$':
@@ -132,5 +157,11 @@ define ipeer::instance (
   file {"$doc_base/app/config/config.local.php":
     ensure => present,
     content => template('ipeer/config.local.php.erb'),
+  }
+
+  # link apc.php
+  file {"$doc_base/app/webroot/apc.php":
+    ensure => present,
+    content => template('ipeer/apc.php.erb'),
   }
 }

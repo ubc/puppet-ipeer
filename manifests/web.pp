@@ -1,6 +1,11 @@
 class ipeer::web(
   $instances = {},
   $timezone = 'America/Vancouver',
+  $proxy_cache_path = false,
+  $proxy_cache_levels      = 1,
+  $proxy_cache_keys_zone   = 'd2:100m',
+  $proxy_cache_max_size    = '500m',
+  $proxy_cache_inactive    = '20m',
 ) {
   
 #  file { "/www_config":
@@ -19,7 +24,13 @@ class ipeer::web(
   # services
   
   if ! defined (Class["nginx"]) {
-    class { 'nginx': }
+    class { 'nginx': 
+      proxy_cache_path      => $proxy_cache_path,
+      proxy_cache_levels    => $proxy_cache_levels,
+      proxy_cache_keys_zone => $proxy_cache_keys_zone,
+      proxy_cache_max_size  => $proxy_cache_max_size,
+      proxy_cache_inactive  => $proxy_cache_inactive,
+    }
   }
   
   # vhosts and locations are defined in ipeer::instance defined type
@@ -43,6 +54,11 @@ class ipeer::web(
     include php::cli
   }
   
+  $apc_stat = $environment ? {
+    /production/ => 0,
+    default => 1,
+  }
+
   if ! defined(Php::Module['pecl-apc']) {
     php::module { 'pecl-apc': }
     php::module::ini { 'pecl-apc':
@@ -50,10 +66,11 @@ class ipeer::web(
           'apc.enabled'      => '1',
           'apc.shm_segments' => '1',
           'apc.shm_size'     => '32M',
+          'apc.stat'	     => $apc_stat,
       }
     }
   }
-
+ 
   if ! defined(Php::Module['xml']) {
     php::module { 'xml': }
   }
