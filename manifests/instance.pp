@@ -38,10 +38,12 @@ define ipeer::instance (
 ) {
 
   $parent_path = dirname($doc_base)
-  exec { 'mkdir_doc_base_dir':
-    path    => [ '/bin', '/usr/bin' ],
-    command => "mkdir -p ${parent_path}",
-    unless  => "test -d ${parent_path}",
+  if ! defined(Exec["mkdir_dir_$parent_path"]) {
+    exec { "mkdir_dir_$parent_path":
+      path    => [ '/bin', '/usr/bin' ],
+      command => "mkdir -p ${parent_path}",
+      unless  => "test -d ${parent_path}",
+    }
   }
 
   if $mount_device {
@@ -109,7 +111,7 @@ define ipeer::instance (
   }
 
   if $static_cache {
-    nginx::resource::location { '~ ^/(img|js|css)/':
+    nginx::resource::location { "static_$server_domain":
       ensure => present,
       www_root	   => "$doc_base/app/webroot",
       vhost => $server_domain,
@@ -118,7 +120,7 @@ define ipeer::instance (
     }
   }
   
-  nginx::resource::location { '~ \.php$':
+  nginx::resource::location { "php_$server_domain":
     ensure => present,
     vhost => $server_domain,
     location => '~ \.php$',
