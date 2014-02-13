@@ -35,6 +35,10 @@ define ipeer::instance (
   $proxy_cache_valid = false,
   $static_cache = false, 
   $apc_password = 'password',
+  $db_name = 'ipeer',
+  $db_username = 'ipeer',
+  $db_password = 'ipeer',  
+  $db_host = 'localhost',
 ) {
 
   $parent_path = dirname($doc_base)
@@ -138,10 +142,21 @@ define ipeer::instance (
   }
 
   # setup iPeer db config file
-  File <<| tag == $domain |>> ->
+  #File <<| tag == $domain |>> ->
   file {"$doc_base/app/config/database.php":
-    ensure => link,
-    target => "/etc/ipeerdb.${domain}.php",
+    ensure => present,
+    content => template('ipeer/database.php.erb'),
+    tag => $domain
+  }
+
+  if ! defined(Mysql::Db["${db_username}@${fqdn}"]) {
+    @@mysql::db { "${db_username}@${fqdn}":
+      user => $db_username,
+      password => $db_password,
+      host => $fqdn,
+      grant => ['ALL'],
+      tag => $domain,
+    }
   }
 
   # make sure the installed.txt exists

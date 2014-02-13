@@ -12,6 +12,8 @@ class ipeer::balancer (
   $proxy_cache_inactive    = '20m',
   $proxy_cache = false,
   $proxy_cache_valid = false,
+  $rewrite_to_https = false,
+  $ip_hash = false,
 ) {
   include epel
 
@@ -28,11 +30,15 @@ class ipeer::balancer (
     proxy_cache_inactive  => $proxy_cache_inactive,
   }
 
-  $app_members = query_nodes("fqdn~\"$domain\" and Class[ipeer::web]", 'ipaddress')
+  $app_members = sort(query_nodes("fqdn~\"$domain\" and Class[ipeer::web]", 'ipaddress'))
 
   nginx::resource::upstream { 'ipeer_app_cluster':
    ensure  => present,
    members => $app_members,
+   upstream_cfg_prepend => $ip_hash ? {
+     true => {'ip_hash' => ''},
+     default => {}
+   },
   }
 
   #nginx::resource::upstream { 'ipeer_static_cluster':
@@ -53,6 +59,8 @@ class ipeer::balancer (
     ssl_port => $ssl_port,
     proxy_cache  =>  $proxy_cache,
     proxy_cache_valid => $proxy_cache_valid,
+    proxy_read_timeout => 600, # matches the fastcgi timeout
+    rewrite_to_https => $rewrite_to_https,
   }
 
   #nginx::resource::location { 'ipeer_static_file':
