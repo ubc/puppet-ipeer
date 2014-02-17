@@ -149,11 +149,14 @@ define ipeer::instance (
     tag => $domain
   }
 
-  if ! defined(Mysql::Db["${db_username}@${fqdn}"]) {
-    @@mysql::db { "${db_username}@${fqdn}":
+  if ! defined(Mysql::Db["${db_name}"]) {
+    @@mysql::db { "${db_name}":
       user => $db_username,
       password => $db_password,
-      host => $fqdn,
+      host => $db_name ? {
+  	'localhost' => $db_name,
+	default => $fqdn,
+      },
       grant => ['ALL'],
       tag => $domain,
     }
