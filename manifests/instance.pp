@@ -39,6 +39,7 @@ define ipeer::instance (
   $db_username = 'ipeer',
   $db_password = 'ipeer',  
   $db_host = 'localhost',
+  $local_config = true,
 ) {
 
   $parent_path = dirname($doc_base)
@@ -174,9 +175,11 @@ define ipeer::instance (
   }
 
   # setup core config override file
-  file {"$doc_base/app/config/config.local.php":
-    ensure => present,
-    content => template('ipeer/config.local.php.erb'),
+  if $local_config {
+    file {"$doc_base/app/config/config.local.php":
+      ensure => present,
+      content => template('ipeer/config.local.php.erb'),
+    }
   }
 
   # link apc.php
