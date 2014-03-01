@@ -154,8 +154,8 @@ define ipeer::instance (
     @@mysql::db { "${db_name}":
       user => $db_username,
       password => $db_password,
-      host => $db_name ? {
-  	'localhost' => $db_name,
+      host => $db_host ? {
+  	'localhost' => $db_host,
 	default => $fqdn,
       },
       grant => ['ALL'],
