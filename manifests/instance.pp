@@ -109,6 +109,7 @@ define ipeer::instance (
     proxy_cache  =>  $proxy_cache,
     proxy_cache_valid => $proxy_cache_valid,
     use_default_location => false,
+    proxy_set_header => ['Host $host', 'X-Real-IP $remote_addr', 'X-Forwarded-For $proxy_add_x_forwarded_for']
   }
 
   nginx::resource::location { "php_root_$server_domain":
