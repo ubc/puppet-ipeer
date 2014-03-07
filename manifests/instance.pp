@@ -87,7 +87,8 @@ define ipeer::instance (
 #    recurse => true,
   } ->
 
-  file { "$doc_base/app/tmp":
+  # TODO: change access to web user
+  file { ["$doc_base/app/tmp", "$doc_base/app/tmp/cache", "$doc_base/app/tmp/logs", "$doc_base/app/tmp/sessions"]:
     ensure => "directory",
     mode => "0777",
   }
