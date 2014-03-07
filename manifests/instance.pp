@@ -157,8 +157,7 @@ define ipeer::instance (
     tag => $domain
   }
 
-  if ! defined(Mysql::Db["${db_name}_${domain}"]) {
-    @@mysql::db { "${db_name}_${domain}":
+    @@mysql::db { "${db_name}_${fqdn}":
       user => $db_username,
       password => $db_password,
       dbname => $db_name,
@@ -169,7 +168,6 @@ define ipeer::instance (
       grant => ['ALL'],
       tag => $domain,
     }
-  }
 
   # make sure the installed.txt exists
   file {"$doc_base/app/config/installed.txt":
