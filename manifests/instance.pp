@@ -93,16 +93,10 @@ define ipeer::instance (
     mode => "0777",
   }
 
-  $custom_cfg = 
-    'if (-f $request_filename) { break; }
-    if (-d $request_filename) { break; }
-    rewrite ^(.+)$ /index.php?url=$1 last;'
- 
   nginx::resource::vhost {$server_domain:
     ensure         => present,
     www_root	   => "$doc_base/app/webroot",
     listen_port    => $port,
-    location_cfg_custom => $custom_cfg,
     server_name => $default ? {
       true  => [$server_domain, $fqdn],
       false => [$server_domain],
@@ -114,6 +108,17 @@ define ipeer::instance (
     ssl_port => $ssl_port,
     proxy_cache  =>  $proxy_cache,
     proxy_cache_valid => $proxy_cache_valid,
+    use_default_location => false,
+  }
+
+  nginx::resource::location { "php_root_$server_domain":
+    ensure => present,
+    vhost => $server_domain,
+    location => '/',
+    www_root => "$doc_base/app/webroot",
+    location_custom_cfg_prepend => ['if (-f $request_filename) { break; }',
+    	'if (-d $request_filename) { break; }',
+    	'rewrite ^(.+)$ /index.php?url=$1 last;']
   }
 
   if $static_cache {
@@ -151,10 +156,11 @@ define ipeer::instance (
     tag => $domain
   }
 
-  if ! defined(Mysql::Db["${db_name}"]) {
-    @@mysql::db { "${db_name}":
+  if ! defined(Mysql::Db["${db_name}_${domain}"]) {
+    @@mysql::db { "${db_name}_${domain}":
       user => $db_username,
       password => $db_password,
+      dbname => $db_name,
       host => $db_host ? {
   	'localhost' => $db_host,
 	default => $fqdn,
