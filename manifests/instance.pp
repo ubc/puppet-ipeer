@@ -40,6 +40,7 @@ define ipeer::instance (
   $db_password = 'ipeer',  
   $db_host = 'localhost',
   $local_config = true,
+  $import_sample_data = false
 ) {
 
   $parent_path = dirname($doc_base)
@@ -162,10 +163,14 @@ define ipeer::instance (
       password => $db_password,
       dbname => $db_name,
       host => $db_host ? {
-  	'localhost' => $db_host,
-	default => $fqdn,
+          'localhost' => $db_host,
+          default => $fqdn,
       },
       grant => ['ALL'],
+      sql => $import_sample_data ? {
+          false => '',
+          true => "$doc_base/app/config/sql/ipeer_samples_data.sql",
+      },
       tag => $domain,
     }
 
