@@ -118,9 +118,9 @@ define ipeer::instance (
     vhost => $server_domain,
     location => '/',
     www_root => "$doc_base/app/webroot",
-    location_custom_cfg_prepend => ['if (-f $request_filename) { break; }',
-    	'if (-d $request_filename) { break; }',
-    	'rewrite ^(.+)$ /index.php?url=$1 last;']
+    location_custom_cfg_prepend => {'if (-f $request_filename)' => '{ break; }',
+      'if (-d $request_filename)' => '{ break; }',
+      'rewrite' => '^(.+)$ /index.php?url=$1 last;'}
   }
 
   if $static_cache {
