@@ -94,6 +94,8 @@ class ipeer::web(
       user    => 'nginx',
       # For the user to exist
       require => Package['nginx'],
+      # increase the termiate timeout for long export
+      request_terminate_timeout => '600s',
   }
   
   # php session directory
