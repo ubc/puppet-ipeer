@@ -32,12 +32,13 @@ class ipeer::balancer (
 
   $app_members = sort(query_nodes("fqdn~\"$domain\" and Class[ipeer::web]", 'ipaddress'))
 
+  $ip_hash_cfg = {'ip_hash' => ''}
   nginx::resource::upstream { 'ipeer_app_cluster':
    ensure  => present,
    members => $app_members,
    upstream_cfg_prepend => $ip_hash ? {
-     true => {'ip_hash' => ''},
-     default => {}
+     true => $ip_hash_cfg,
+     default => undef
    },
   }
 
