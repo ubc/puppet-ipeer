@@ -118,9 +118,13 @@ define ipeer::instance (
     vhost => $server_domain,
     location => '/',
     www_root => "$doc_base/app/webroot",
-    location_custom_cfg_prepend => {'if (-f $request_filename)' => '{ break; }',
+    location_custom_cfg_prepend => {
+      'if (-f $request_filename)' => '{ break; }',
       'if (-d $request_filename)' => '{ break; }',
-      'rewrite' => '^(.+)$ /index.php?url=$1 last;'}
+    },
+    location_custom_cfg_append => {
+      'rewrite' => '^(.+)$ /index.php?url=$1 last;'
+    }
   }
 
   if $static_cache {
@@ -138,7 +142,9 @@ define ipeer::instance (
     vhost => $server_domain,
     location => '~ \.php$',
     fastcgi        => 'ipeer',
-    fastcgi_script => "$doc_base/app/webroot\$fastcgi_script_name",
+    fastcgi_param => {
+      'SCRIPT_FILENAME' => "$doc_base/app/webroot\$fastcgi_script_name",
+    },
     location_cfg_prepend => { fastcgi_read_timeout => 600 },
   }
 
