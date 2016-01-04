@@ -33,14 +33,15 @@ define ipeer::instance (
   $ssl_port = 443,
   $proxy_cache = false,
   $proxy_cache_valid = false,
-  $static_cache = false, 
+  $static_cache = false,
   $apc_password = 'password',
   $db_name = 'ipeer',
   $db_username = 'ipeer',
-  $db_password = 'ipeer',  
+  $db_password = 'ipeer',
   $db_host = 'localhost',
   $local_config = true,
-  $import_sample_data = false
+  $import_sample_data = false,
+  $fastcgi_read_timeout = 600
 ) {
 
   $parent_path = dirname($doc_base)
@@ -129,23 +130,23 @@ define ipeer::instance (
 
   if $static_cache {
     nginx::resource::location { "static_$server_domain":
-      ensure => present,
-      www_root	   => "$doc_base/app/webroot",
-      vhost => $server_domain,
+      ensure   => present,
+      www_root => "$doc_base/app/webroot",
+      vhost    => $server_domain,
       location => '~ ^/(img|js|css)/',
       location_cfg_append => { 'access_log' => 'off', 'expires' => $static_cache, 'add_header' => 'Cache-Control public'}
     }
   }
-  
+
   nginx::resource::location { "php_$server_domain":
-    ensure => present,
-    vhost => $server_domain,
-    location => '~ \.php$',
-    fastcgi        => 'ipeer',
+    ensure        => present,
+    vhost         => $server_domain,
+    location      => '~ \.php$',
+    fastcgi       => 'ipeer',
     fastcgi_param => {
       'SCRIPT_FILENAME' => "$doc_base/app/webroot\$fastcgi_script_name",
     },
-    location_cfg_prepend => { fastcgi_read_timeout => 600 },
+    location_cfg_prepend => { fastcgi_read_timeout => $fastcgi_read_timeout },
   }
 
   if ! defined(Firewall["100 allow $port access"]) {
