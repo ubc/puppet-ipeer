@@ -10,7 +10,7 @@ Puppet 3.2+ with parser=future enabled
 * jfryman/puppet-nginx
 * theforeman/puppet-git
 * puppetlabs/puppetlabs-vcsrepo 
-* thias/puppet-php
+* mayflower/puppet-php
 * puppetlabs/puppetlabs-firewall
 * puppetlabs/puppetlabs-mysql
 * puppetlabs/puppetlabs-concat
