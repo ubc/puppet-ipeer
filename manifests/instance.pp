@@ -157,6 +157,14 @@ define ipeer::instance (
     }
   }
 
+  if ! defined(Firewall["110 allow zabbix access"]) {
+    firewall { "110 allow zabbix access":
+      port   => 10050,
+      proto  => tcp,
+      action => accept,
+    }
+  }
+
   # setup iPeer db config file
   #File <<| tag == $domain |>> ->
   file {"$doc_base/app/config/database.php":
